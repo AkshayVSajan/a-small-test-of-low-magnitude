@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forest Fire Tracking Station</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #121212; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Top Navigation */
+    nav { display: flex; justify-content: center; background-color: #1e1e1e; padding: 12px; gap: 15px; border-bottom: 2px solid #333; }
+    nav button { background-color: #333; color: white; border: 1px solid #555; padding: 10px 20px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: 0.3s; }
+    nav button:hover, nav button.active { background-color: #ff3d00; color: white; border-color: #ff3d00; }
+    
+    .page { display: none; padding: 20px; flex-direction: column; align-items: center; }
+    .page.active { display: flex; }
 
+    /* Dashboard Styling */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin-top: 20px; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; border: 2px solid #333; transition: all 0.3s ease; }
+    .card.alert { border-color: #ff1744; background-color: #2c0b0e; animation: pulse 1.5s infinite; }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 23, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+    }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem; }
+    .status-badge.safe { background-color: #00e676; color: #000; }
+    .status-badge.danger { background-color: #ff1744; color: #fff; }
+
+    .cam-feed { width: 100%; height: 180px; background-color: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin: 10px 0; object-fit: cover; }
+    
+    /* Simulator Controls */
+    .simulator { margin-top: 30px; background: #252525; border: 1px dashed #ffab00; padding: 20px; border-radius: 10px; width: 100%; max-width: 1000px; }
+    .sim-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .sim-btn { padding: 8px 15px; background-color: #ffab00; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+    .sim-btn.danger { background-color: #ff1744; color: #fff; }
+  </style>
+  
+  <!-- Firebase Compat Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <nav>
+    <button class="nav-btn active" onclick="showPage('dashboard', this)">🔥 Fire Dashboard</button>
+    <button class="nav-btn" onclick="showPage('page1', this)">Blue Test</button>
+  </nav>
+
+  <!-- Firebase Live Dashboard -->
+  <div id="dashboard" class="page active">
+    <h2>Live Monitoring Station</h2>
+    <p style="color: #aaa; margin-top: 5px;">Synced with Google Firebase in Real Time</p>
+
+    <!-- Camera Grid -->
+    <div class="grid">
+      
+      <!-- Camera 1 -->
+      <div id="card-CAM_01" class="card">
+        <div class="card-header">
+          <h3>Camera 01 (North Ridge)</h3>
+          <span id="badge-CAM_01" class="status-badge safe">NORMAL</span>
+        </div>
+        <img id="img-CAM_01" class="cam-feed" src="https://picsum.photos/400/200?grayscale" alt="Cam 1 Feed">
+        <p><strong>Smoke Level:</strong> <span id="smoke-CAM_01">CLEAR</span></p>
+        <p><strong>Last Updated:</strong> <span id="time-CAM_01">--</span></p>
+      </div>
+
+      <!-- Camera 2 -->
+      <div id="card-CAM_02" class="card">
+        <div class="card-header">
+          <h3>Camera 02 (East Valley)</h3>
+          <span id="badge-CAM_02" class="status-badge safe">NORMAL</span>
+        </div>
+        <img id="img-CAM_02" class="cam-feed" src="https://picsum.photos/401/200?grayscale" alt="Cam 2 Feed">
+        <p><strong>Smoke Level:</strong> <span id="smoke-CAM_02">CLEAR</span></p>
+        <p><strong>Last Updated:</strong> <span id="time-CAM_02">--</span></p>
+      </div>
+
+    </div>
+
+    <!-- Built-in Hardware Simulator -->
+    <div class="simulator">
+      <h3>⚡ ESP32 Hardware Simulator</h3>
+      <p style="font-size: 0.9rem; color: #ccc;">Click these buttons to simulate an ESP32 camera sending data to Firebase:</p>
+      <div class="sim-buttons">
+        <button class="sim-btn danger" onclick="simulateESP32('CAM_01', true)">🔥 Trigger Smoke on Cam 01</button>
+        <button class="sim-btn" onclick="simulateESP32('CAM_01', false)">✅ Clear Cam 01</button>
+        <button class="sim-btn danger" onclick="simulateESP32('CAM_02', true)">🔥 Trigger Smoke on Cam 02</button>
+        <button class="sim-btn" onclick="simulateESP32('CAM_02', false)">✅ Clear Cam 02</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 1 (Blue Test) -->
+  <div id="page1" class="page">
+    <h1 style="color: #42a5f5; margin-top: 50px;">This is a test</h1>
+  </div>
+
+  <script>
+    // ----------------------------------------------------
+    // REPLACE THE OBJECT BELOW WITH YOUR FIREBASE CONFIG!
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Tab Switching
+    function showPage(pageId, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ----------------------------------------------------
+    // REAL-TIME FIREBASE LISTENERS (The Magic!)
+    // ----------------------------------------------------
+    ['CAM_01', 'CAM_02'].forEach(camId => {
+      db.ref('cameras/' + camId).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const card = document.getElementById(`card-${camId}`);
+        const badge = document.getElementById(`badge-${camId}`);
+        const smoke = document.getElementById(`smoke-${camId}`);
+        const time = document.getElementById(`time-${camId}`);
+        const img = document.getElementById(`img-${camId}`);
+
+        time.innerText = data.last_updated || 'Just now';
+
+        if (data.smoke_detected) {
+          card.classList.add('alert');
+          badge.className = "status-badge danger";
+          badge.innerText = "FIRE ALERT!";
+          smoke.innerText = "⚠️ SMOKE DETECTED";
+          smoke.style.color = "#ff1744";
+          img.src = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80"; // Fire image
+        } else {
+          card.classList.remove('alert');
+          badge.className = "status-badge safe";
+          badge.innerText = "NORMAL";
+          smoke.innerText = "CLEAR";
+          smoke.style.color = "#00e676";
+          img.src = camId === 'CAM_01' ? "https://picsum.photos/400/200?grayscale" : "https://picsum.photos/401/200?grayscale";
+        }
+      });
+    });
+
+    // ----------------------------------------------------
+    // SIMULATE ESP32 SENDING DATA TO CLOUD
+    // ----------------------------------------------------
+    function simulateESP32(camId, isSmoke) {
+      const now = new Date().toLocaleTimeString();
+      db.ref('cameras/' + camId).set({
+        smoke_detected: isSmoke,
+        last_updated: now
+      });
+    }
+  </script>
+</body>
+</html>
