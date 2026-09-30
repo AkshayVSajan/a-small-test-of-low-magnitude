@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Pages Test Site</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Bar */
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #1a1a1a;
+      padding: 12px;
+      gap: 15px;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    nav button {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    nav button:hover, nav button.active {
+      background-color: #ffffff;
+      color: #1a1a1a;
+      border-color: #ffffff;
+    }
+
+    /* Page Containers */
+    .page {
+      display: none;
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 60px);
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    /* Page 1: Blue */
+    #page1 {
+      background-color: #0d47a1;
+    }
+
+    #page1 h1 {
+      font-size: 3.5rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Page 2: Black with Continuous Scrolling */
+    #page2 {
+      background-color: #000000;
+    }
+
+    .marquee-container {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .marquee-text {
+      display: inline-block;
+      font-size: 3.5rem;
+      font-weight: bold;
+      padding-left: 100%;
+      animation: marquee 8s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* Page 3: Purple with Central Spinning Text */
+    #page3 {
+      background-color: #4a148c;
+      flex-direction: column;
+    }
+
+    .spinner-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .spinning-text {
+      font-size: 2.2rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 20px;
+      /* Default spin duration uses a CSS variable */
+      animation: spin var(--spin-duration, 3s) linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Range Slider Control */
+    .controls {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 15px 25px;
+      border-radius: 30px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      backdrop-filter: blur(5px);
+    }
+
+    .controls label {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .controls input[type="range"] {
+      width: 200px;
+      cursor: pointer;
+    }
+
+    #speedValue {
+      min-width: 80px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Buttons -->
+  <nav>
+    <button class="nav-btn active" onclick="showPage('page1', this)">Page 1</button>
+    <button class="nav-btn" onclick="showPage('page2', this)">Page 2</button>
+    <button class="nav-btn" onclick="showPage('page3', this)">Page 3</button>
+  </nav>
+
+  <!-- Page 1: Blue -->
+  <div id="page1" class="page active">
+    <h1>This is a test</h1>
+  </div>
+
+  <!-- Page 2: Black -->
+  <div id="page2" class="page">
+    <div class="marquee-container">
+      <div class="marquee-text">This is a text</div>
+    </div>
+  </div>
+
+  <!-- Page 3: Purple -->
+  <div id="page3" class="page">
+    <div class="spinner-container">
+      <div id="spinningText" class="spinning-text">What is love? Baby don't hurt me, no more</div>
+    </div>
+    <div class="controls">
+      <label for="speedSlider">Spin Speed:</label>
+
+      <!-- Range Slider: Lower value = faster rotation (fewer seconds per turn) -->
+      <input type="range" id="speedSlider" min="0.2" max="6" step="0.1" value="3">
+      <span id="speedValue">3.0s / turn</span>
+    </div>
+  </div>
+
+  <!-- JavaScript to Handle Switching & Speed Control -->
+  <script>
+    // Tab switching logic
+    function showPage(pageId, btn) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(pageId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Speed slider logic for Page 3
+    const slider = document.getElementById('speedSlider');
+    const spinningText = document.getElementById('spinningText');
+    const speedValue = document.getElementById('speedValue');
+
+    slider.addEventListener('input', (e) => {
+      const duration = e.target.value;
+      // Updates the CSS --spin-duration variable in real-time
+      spinningText.style.setProperty('--spin-duration', `${duration}s`);
+      speedValue.textContent = `${parseFloat(duration).toFixed(1)}s / turn`;
+    });
+  </script>
+</body>
+</html>
